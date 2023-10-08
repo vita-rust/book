@@ -2,7 +2,7 @@
 
 ## Online Copies of this Book
 
-This book is located at https://vita-rust.github.io/vita-rust-book/.
+This book is located at https://vita-rust.github.io/book/.
 
 ## License
 
