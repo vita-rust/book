@@ -1,0 +1,10 @@
+[package]
+name = "tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+doc-comment = "0.3.3"
+libc = "0.2.149"
+vitasdk-sys = { version = "0.3.2", features = ["SceDisplay_stub", "SceSysmem_stub", "SceKernelDmacMgr_stub", "SceGxm_stub"] }

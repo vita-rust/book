@@ -1,0 +1,60 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/vita-rust/vitasdk-rs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Generate harness
+        working-directory: ./tests
+        run: ./generate.sh
+      - name: Compile code samples
+        working-directory: ./tests
+        run: |
+          apk add --no-cache libc6-compat;
+          if ! cargo vita build vpk --release --tests; then
+            echo "Build failed with exit code $?";
+            exit 1;
+          fi
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: tests
+          path: target/armv7-sony-vita-newlibeabihf/release/deps/*.vpk
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python dependencies
+        run: |
+          pip3 install --user python-dateutil linkchecker
+      - name: Put pip binary directory into path
+        run: echo "~/.local/bin" >> $GITHUB_PATH
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: "0.4.35"
+      - name: Build book
+        run: mdbook build
+      - name: Check links
+        run: linkchecker book
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./book
